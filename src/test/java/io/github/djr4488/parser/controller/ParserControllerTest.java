@@ -49,7 +49,7 @@ public class ParserControllerTest {
     @Test
     public void testUserAgentParsingPartial() {
         UserAgent ua = parserController.parsePartialUserAgent(userAgentTest);
-        assertNull(ua.getValue("DeviceName"));
+        assertEquals("Unknown", ua.getValue("DeviceName"));
         assertEquals("Google", ua.getValue("DeviceBrand"));
     }
 
