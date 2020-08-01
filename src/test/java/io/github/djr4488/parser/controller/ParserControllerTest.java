@@ -7,6 +7,9 @@ import org.djr.cdi.logs.Slf4jLogger;
 import org.jboss.weld.junit5.auto.AddBeanClasses;
 import org.jboss.weld.junit5.auto.EnableAutoWeld;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -19,6 +22,7 @@ import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.parallel.Resources.SYSTEM_PROPERTIES;
 
 @EnableAutoWeld
 @AddBeanClasses({ LoggerProducer.class, ParserProducer.class, ParserController.class })
@@ -56,7 +60,7 @@ public class ParserControllerTest {
     public void testMultiThreadedFullAnalyzer() throws Exception {
         List<Future<UserAgent.ImmutableUserAgent>> futures = new ArrayList<>();
         ExecutorService es = Executors.newFixedThreadPool(4);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1000; i++) {
             futures.add(es.submit(new UaaRunnable(userAgentTest, parserController, true)));
             futures.add(es.submit(new UaaRunnable(mobileSafariApple, parserController, true)));
             futures.add(es.submit(new UaaRunnable(chromeApple, parserController, true)));
@@ -121,7 +125,7 @@ public class ParserControllerTest {
     public void testMultiThreadedPartialAnalyzer() throws Exception {
         List<Future<UserAgent.ImmutableUserAgent>> futures = new ArrayList<>();
         ExecutorService es = Executors.newFixedThreadPool(4);
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1000; i++) {
             futures.add(es.submit(new UaaRunnable(userAgentTest, parserController, false)));
             futures.add(es.submit(new UaaRunnable(mobileSafariApple, parserController, false)));
             futures.add(es.submit(new UaaRunnable(chromeApple, parserController, false)));
