@@ -25,7 +25,7 @@ public class ParserProducer {
         UserAgentAnalyzer.UserAgentAnalyzerBuilder uaab =
                 UserAgentAnalyzer.newBuilder()
                                  .hideMatcherLoadStats()
-                                 .withCache(20000);
+                                 .withoutCache();
         for (String field : fields) {
             uaab.withField(field);
         }

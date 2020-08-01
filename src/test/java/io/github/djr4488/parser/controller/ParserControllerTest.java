@@ -18,7 +18,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @EnableAutoWeld
@@ -43,36 +42,126 @@ public class ParserControllerTest {
     public void testUserAgentParsingFull() {
         UserAgent ua =
                 parserController.parseFullUserAgent(userAgentTest);
-        assertEquals("Google Nexus 6", ua.getValue("DeviceName"));
+        assertEquals("Phone", ua.getValue("DeviceClass"));
     }
 
     @Test
     public void testUserAgentParsingPartial() {
         UserAgent ua = parserController.parsePartialUserAgent(userAgentTest);
-        assertEquals("Unknown", ua.getValue("DeviceName"));
-        assertEquals("Google", ua.getValue("DeviceBrand"));
+        assertEquals("Phone", ua.getValue("DeviceClass"));
+        assertEquals("Android 7.0", ua.getValue("OperatingSystemNameVersion"));
     }
 
     @Test
-    public void testMultiThreaded() throws Exception {
+    public void testMultiThreadedFullAnalyzer() throws Exception {
         List<Future<UserAgent.ImmutableUserAgent>> futures = new ArrayList<>();
         ExecutorService es = Executors.newFixedThreadPool(4);
         for (int i = 0; i < 10; i++) {
             futures.add(es.submit(new UaaRunnable(userAgentTest, parserController, true)));
-            futures.add(es.submit(new UaaRunnable(mobileSafariApple, parserController, false)));
+            futures.add(es.submit(new UaaRunnable(mobileSafariApple, parserController, true)));
             futures.add(es.submit(new UaaRunnable(chromeApple, parserController, true)));
-            futures.add(es.submit(new UaaRunnable(chromeAndroid, parserController, false)));
+            futures.add(es.submit(new UaaRunnable(chromeAndroid, parserController, true)));
             futures.add(es.submit(new UaaRunnable(facebookIos, parserController, true)));
-            futures.add(es.submit(new UaaRunnable(ieWindows, parserController, false)));
-            futures.add(es.submit(new UaaRunnable(edgeWindows, parserController, false)));
+            futures.add(es.submit(new UaaRunnable(ieWindows, parserController, true)));
+            futures.add(es.submit(new UaaRunnable(edgeWindows, parserController, true)));
             futures.add(es.submit(new UaaRunnable(mobileSafariApple, parserController, true)));
             futures.add(es.submit(new UaaRunnable(chromeAndroid, parserController, true)));
+            futures.add(es.submit(new UaaRunnable(facebookIos, parserController, true)));
+        }
+        for (Future<UserAgent.ImmutableUserAgent> futureResult : futures) {
+            try {
+                while (!futureResult.isDone());
+                UserAgent.ImmutableUserAgent ua = futureResult.get();
+                log.info("testMultiThreaded() userAgent:{}", ua);
+                switch (ua.getUserAgentString()) {
+                    case userAgentTest:
+                        assertEquals("Phone", ua.get("DeviceClass").getValue());
+                        assertEquals("Google", ua.get("DeviceBrand").getValue());
+                        assertEquals("Android 7.0", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case mobileSafariApple:
+                        assertEquals("Phone", ua.get("DeviceClass").getValue());
+                        assertEquals("Apple", ua.get("DeviceBrand").getValue());
+                        assertEquals("iOS 10.3", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case chromeApple:
+                        assertEquals("Phone", ua.get("DeviceClass").getValue());
+                        assertEquals("Apple", ua.get("DeviceBrand").getValue());
+                        assertEquals("iOS 10.3", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case chromeAndroid:
+                        assertEquals("Desktop", ua.get("DeviceClass").getValue());
+                        assertEquals("Unknown", ua.get("DeviceBrand").getValue());
+                        assertEquals("Linux ??", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case facebookIos:
+                        assertEquals("Phone", ua.get("DeviceClass").getValue());
+                        assertEquals("Apple", ua.get("DeviceBrand").getValue());
+                        assertEquals("iOS 13.3.1", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case ieWindows:
+                        assertEquals("Desktop", ua.get("DeviceClass").getValue());
+                        assertEquals("Unknown", ua.get("DeviceBrand").getValue());
+                        assertEquals("Windows 7", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case edgeWindows:
+                        assertEquals("Desktop", ua.get("DeviceClass").getValue());
+                        assertEquals("Unknown", ua.get("DeviceBrand").getValue());
+                        assertEquals("Windows 10.0", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                }
+            } catch (Exception ex) {
+                log.error("testMultiThreaded() exception occurred:", ex);
+                fail("With exception");
+            }
+        }
+    }
+
+    @Test
+    public void testMultiThreadedPartialAnalyzer() throws Exception {
+        List<Future<UserAgent.ImmutableUserAgent>> futures = new ArrayList<>();
+        ExecutorService es = Executors.newFixedThreadPool(4);
+        for (int i = 0; i < 10; i++) {
+            futures.add(es.submit(new UaaRunnable(userAgentTest, parserController, false)));
+            futures.add(es.submit(new UaaRunnable(mobileSafariApple, parserController, false)));
+            futures.add(es.submit(new UaaRunnable(chromeApple, parserController, false)));
+            futures.add(es.submit(new UaaRunnable(chromeAndroid, parserController, false)));
+            futures.add(es.submit(new UaaRunnable(facebookIos, parserController, false)));
+            futures.add(es.submit(new UaaRunnable(ieWindows, parserController, false)));
+            futures.add(es.submit(new UaaRunnable(edgeWindows, parserController, false)));
+            futures.add(es.submit(new UaaRunnable(mobileSafariApple, parserController, false)));
+            futures.add(es.submit(new UaaRunnable(chromeAndroid, parserController, false)));
             futures.add(es.submit(new UaaRunnable(facebookIos, parserController, false)));
         }
         for (Future<UserAgent.ImmutableUserAgent> futureResult : futures) {
             try {
                 while (!futureResult.isDone());
-                log.info("testMultiThreaded() futureResult:{}", futureResult.get());
+                UserAgent.ImmutableUserAgent ua = futureResult.get();
+                log.info("testMultiThreaded() userAgent:{}", ua);
+                assertEquals("Unknown", ua.get("DeviceBrand").getValue());
+                switch (ua.getUserAgentString()) {
+                    case userAgentTest:
+                        assertEquals("Android 7.0", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case mobileSafariApple:
+                        assertEquals("iOS 10.3", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case chromeApple:
+                        assertEquals("iOS 10.3", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case chromeAndroid:
+                        assertEquals("Linux ??", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case facebookIos:
+                        assertEquals("iOS 13.3.1", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case ieWindows:
+                        assertEquals("Windows 7", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                    case edgeWindows:
+                        assertEquals("Windows 10.0", ua.get("OperatingSystemNameVersion").getValue());
+                        break;
+                }
             } catch (Exception ex) {
                 log.error("testMultiThreaded() exception occurred:", ex);
                 fail("With exception");

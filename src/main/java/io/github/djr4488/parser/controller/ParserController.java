@@ -21,14 +21,16 @@ public class ParserController {
     private UserAgentAnalyzer fullUserAgentAnalyzer;
 
     @Inject
-    @PartialUserAgentAnalyzer({ "DeviceBrand" })
+    @PartialUserAgentAnalyzer({ "OperatingSystemNameVersion" })
     private UserAgentAnalyzer partialUserAgentAnalyzer;
 
     public UserAgent parseFullUserAgent(String userAgent) {
-        return fullUserAgentAnalyzer.parse(userAgent);
+        UserAgent ua = fullUserAgentAnalyzer.parse(userAgent);
+        return ua;
     }
 
     public UserAgent parsePartialUserAgent(String userAgent) {
-        return partialUserAgentAnalyzer.parse(userAgent);
+        UserAgent ua = partialUserAgentAnalyzer.parse(userAgent);
+        return ua;
     }
 }

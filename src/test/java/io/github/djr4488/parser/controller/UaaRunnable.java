@@ -23,7 +23,7 @@ public class UaaRunnable implements Callable<UserAgent.ImmutableUserAgent> {
     public UserAgent.ImmutableUserAgent call() throws Exception {
         UserAgent.ImmutableUserAgent ua;
          if (fullAnalysis) {
-             ua = (UserAgent.ImmutableUserAgent)controller.parsePartialUserAgent(userAgentStr);
+             ua = (UserAgent.ImmutableUserAgent)controller.parseFullUserAgent(userAgentStr);
          } else {
              ua = (UserAgent.ImmutableUserAgent)controller.parsePartialUserAgent(userAgentStr);
          }
